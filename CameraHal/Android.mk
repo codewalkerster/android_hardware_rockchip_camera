@@ -97,7 +97,7 @@ LOCAL_SRC_FILES += \
 endif
 endif
 
-ifeq ($(strip $(TARGET_BOARD_HARDWARE)),rk30board) 
+ifeq ($(strip $(TARGET_BOARD_HARDWARE)),odroidn1)
 LOCAL_C_INCLUDES += \
 	frameworks/base/include/ui \
 	frameworks/av/include \
@@ -224,7 +224,7 @@ ifeq ($(strip $(GRAPHIC_MEMORY_PROVIDER)),dma_buf)
 LOCAL_CFLAGS += -DUSE_DMA_BUF
 endif
 
-ifeq ($(strip $(TARGET_BOARD_HARDWARE)),rk30board)	
+ifeq ($(strip $(TARGET_BOARD_HARDWARE)),odroidn1)
 LOCAL_CFLAGS += -DTARGET_RK30
 LOCAL_CFLAGS += -DHAL_MOCKUP
 endif
@@ -372,7 +372,7 @@ endif
 LOCAL_MODULE_RELATIVE_PATH := hw
 endif
 
-LOCAL_MODULE:=camera.rk30board
+LOCAL_MODULE:=camera.odroidn1
 
 LOCAL_MODULE_TAGS:= optional
 include $(BUILD_SHARED_LIBRARY)
