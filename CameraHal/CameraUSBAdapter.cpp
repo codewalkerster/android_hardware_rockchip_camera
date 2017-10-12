@@ -12,8 +12,8 @@ CameraUSBAdapter::CameraUSBAdapter(int cameraId)
     CameraHal_SupportFmt[0] = V4L2_PIX_FMT_NV12;
     CameraHal_SupportFmt[1] = V4L2_PIX_FMT_NV16;
     #if CONFIG_CAMERA_UVC_MJPEG_SUPPORT
-    CameraHal_SupportFmt[2] = V4L2_PIX_FMT_MJPEG;
-    CameraHal_SupportFmt[3] = V4L2_PIX_FMT_YUYV;
+    CameraHal_SupportFmt[2] = V4L2_PIX_FMT_YUYV;
+    CameraHal_SupportFmt[3] = V4L2_PIX_FMT_MJPEG;
     CameraHal_SupportFmt[4] = V4L2_PIX_FMT_RGB565;
     #else
     CameraHal_SupportFmt[2] = V4L2_PIX_FMT_YUYV;
