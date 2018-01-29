@@ -288,6 +288,21 @@ static int cam_mem_gralloc_ops_deInit(cam_mem_handle_t* handle)
 #endif
 #endif
 
+struct dma_buf_sync {
+        __u64 flags;
+};
+
+#define DMA_BUF_SYNC_READ      (1 << 0)
+#define DMA_BUF_SYNC_WRITE     (2 << 0)
+#define DMA_BUF_SYNC_RW        (DMA_BUF_SYNC_READ | DMA_BUF_SYNC_WRITE)
+#define DMA_BUF_SYNC_START     (0 << 2)
+#define DMA_BUF_SYNC_END       (1 << 2)
+#define DMA_BUF_SYNC_VALID_FLAGS_MASK \
+        (DMA_BUF_SYNC_RW | DMA_BUF_SYNC_END)
+#define DMA_BUF_BASE            'b'
+#define DMA_BUF_IOCTL_SYNC      _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
+
+
 static cam_mem_handle_t*  cam_mem_gralloc_ops_init(int iommu_enabled,unsigned int mem_flag,int phy_continuos)
 {
 	int ret = 0;
@@ -487,17 +502,28 @@ static int cam_mem_gralloc_ops_iommu_unmap(cam_mem_handle_t* handle,cam_mem_info
 //flush cache
 static int cam_mem_gralloc_ops_flush_cache(cam_mem_handle_t* handle,cam_mem_info_t* mem)
 {
-    unsigned int grallocFlags = 0;
+	struct dma_buf_sync sync_args;
 	int ret = 0;
 	void* mem_addr;
-	//LOGW("%s: havn't been implemented!",__FUNCTION__);
     GraphicBuffer* mgraphicbuf = (GraphicBuffer*)(mem->priv);
+
+	if (!handle || !mem) {
+		TRACE_E("%s:invalid ion mem handle!",__FUNCTION__);
+		return -1;
+	}
+
 	ret = mgraphicbuf->lock(handle->flag, (void**)&mem_addr);
 
 	if (ret) {
 		TRACE_E("lock buffer error : %s\n",strerror(errno));
 		return -1;
 	}
+
+	sync_args.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
+	ret = ioctl(mem->fd, DMA_BUF_IOCTL_SYNC, &sync_args);
+	if (ret != 0)
+		LOGE("%s: ret %d ,DMA_BUF_IOCTL_SYNC failed!", __func__, ret);
+
 	mgraphicbuf->unlock();
 	return 0;
 }

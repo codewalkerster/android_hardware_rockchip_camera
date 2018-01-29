@@ -1342,7 +1342,40 @@ int GrallocDrmMemManager::destroyJpegBuffer()
 int GrallocDrmMemManager::flushCacheMem(buffer_type_enum buftype,unsigned int offset, unsigned int len)
 {
     Mutex::Autolock lock(mLock);
+	cam_mem_info_t** tmpalloc = NULL;
+	struct bufferinfo_s* tmp_buf = NULL;
 
+	switch(buftype)
+	{
+		case PREVIEWBUFFER:
+			tmpalloc = mPreviewData;
+			tmp_buf = mPreviewBufferInfo;
+			break;
+		case RAWBUFFER:
+			tmpalloc = mRawData;
+			tmp_buf = mRawBufferInfo;
+			break;
+		case JPEGBUFFER:
+			tmpalloc = mJpegData;
+			tmp_buf = mJpegBufferInfo;
+			break;
+		case VIDEOENCBUFFER:
+			tmpalloc = mVideoEncData;
+			tmp_buf = mVideoEncBufferInfo;
+			break;
+
+		default:
+			LOGE("buffer type is wrong !");
+			break;
+	}
+
+	for(unsigned int i = 0;(tmp_buf && (i < tmp_buf->mNumBffers));i++){
+		if(*tmpalloc && (*tmpalloc)->vir_addr) {
+			mOps->flush_cache(mHandle, *tmpalloc);
+		}
+		tmpalloc++;
+	}
+ 
     return 0;
 }
 #endif

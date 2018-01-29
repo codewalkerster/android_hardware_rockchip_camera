@@ -1008,7 +1008,7 @@ int CameraUSBAdapter::reprocessFrame(FramInfo_s* frame)
         if (ret < 0){
             LOGE("%s(%d): yuyv convert to nv12 error!",__FUNCTION__,__LINE__);
         }
-
+		mPreviewBufProvider->flushBuffer(frame->frame_index);
     }else{
         LOGE("camerahal not support this format %d",frame->frame_fmt);
         ret =  -1;
