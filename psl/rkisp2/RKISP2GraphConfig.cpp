@@ -75,7 +75,7 @@ const string MEDIACTL_PREVIEWNAME = "rkisp1_selfpath";
 const string MEDIACTL_POSTVIEWNAME = "postview";
 
 const string MEDIACTL_STATNAME = "rkisp1-statistics";
-const string MEDIACTL_VIDEONAME_CIF = "stream_cif";
+const string MEDIACTL_VIDEONAME_CIF = "stream_cif_dvp_id0";
 const string MEDIACTL_VIDEONAME_CIF_MIPI_ID0 = "stream_cif_mipi_id0";
 
 RKISP2GraphConfig::RKISP2GraphConfig() :
