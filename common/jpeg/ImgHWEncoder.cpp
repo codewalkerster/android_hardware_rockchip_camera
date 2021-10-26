@@ -30,7 +30,7 @@ namespace camera2 {
 
 ImgHWEncoder::ImgHWEncoder(int cameraid) :
     mCameraId(cameraid),
-    mPool(NULL)
+    mEncoder(new MpiJpegEncoder)
 {
     memset(sMaker, 0, sizeof(sMaker));
     memset(sModel, 0, sizeof(sModel));
@@ -50,9 +50,10 @@ status_t ImgHWEncoder::init()
 
     memset(&mExifInfo, 0, sizeof(RkExifInfo));
     memset(&mGpsInfo, 0, sizeof(RkGPSInfo));
-    if (create_vpu_memory_pool_allocator(&mPool, 1, 320*240*2) < 0) {
-        LOGE("@%s %d: create vpu memory failed ", __FUNCTION__, __LINE__);
-        return UNKNOWN_ERROR;
+
+    if (!mEncoder->prepareEncoder()) {
+        LOGE("@%s %d: failed to setup encoder", __FUNCTION__, __LINE__);
+        status = UNKNOWN_ERROR;
     }
 
     return status;
@@ -61,9 +62,10 @@ status_t ImgHWEncoder::init()
 void ImgHWEncoder::deInit()
 {
     LOGI("@%s enter", __FUNCTION__);
-    if (mPool) {
-        release_vpu_memory_pool_allocator(mPool);
-        mPool = NULL;
+
+    if (mEncoder) {
+        delete mEncoder;
+        mEncoder = NULL;
     }
 }
 
@@ -116,7 +118,7 @@ void ImgHWEncoder::fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAt
     exifInfo.SceneCaptureType = exifAttrs->scene_capture_type;
     exifInfo.makernote = NULL;
     exifInfo.makernotechars = 0;
-    memcpy(exifInfo.subsectime, exifAttrs->subsec_time, 8);
+    memcpy(exifInfo.subsec_time, exifAttrs->subsec_time, 8);
 }
 
 void ImgHWEncoder::fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs)
@@ -174,8 +176,9 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     PERFORMANCE_ATRACE_CALL();
     status_t status = NO_ERROR;
 
-    JpegEncInInfo  JpegInInfo;
-    JpegEncOutInfo JpegOutInfo;
+    MpiJpegEncoder::EncInInfo encInInfo;
+    MpiJpegEncoder::EncOutInfo encOutInfo;
+
     std::shared_ptr<CameraBuffer> srcBuf = package.main;
     std::shared_ptr<CameraBuffer> destBuf = package.jpegOut;
     ExifMetaData     *exifMeta = package.exifMeta;
@@ -201,72 +204,63 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     if(!checkInputBuffer(srcBuf.get()))
         return UNKNOWN_ERROR;
 
-    JpegInInfo.pool = mPool;
-    JpegInInfo.frameHeader = 1;
-    // TODO: we only support DEGREE_0 now
-    JpegInInfo.rotateDegree = DEGREE_0;
-    // After Android7.1, HW jpeg encoder just supports fd, and
-    // no longer supports virtual address.
-    JpegInInfo.y_rgb_addr = srcBuf->dmaBufFd();
-    // virtual address is just used for thumbnail
-    JpegInInfo.y_vir_addr = (unsigned char*)srcBuf->data();
-    JpegInInfo.uv_vir_addr = ((unsigned char*)srcBuf->data() + jpegw*jpegh);
-    JpegInInfo.inputW = jpegw;
-    JpegInInfo.inputH = jpegh;
-    if(srcBuf->v4l2Fmt() != V4L2_PIX_FMT_NV12) {
-        LOGE("@%s %d: srcBuffer format(%s) is not NV12", __FUNCTION__, __LINE__, v4l2Fmt2Str(srcBuf->v4l2Fmt()));
-        return UNKNOWN_ERROR;
-    }
-    JpegInInfo.type = JPEGENC_YUV420_SP;//HWJPEGENC_RGB888//HWJPEGENC_RGB565
+    memset(&encInInfo, 0, sizeof(MpiJpegEncoder::EncInInfo));
+    memset(&encOutInfo, 0, sizeof(MpiJpegEncoder::EncOutInfo));
 
-    JpegInInfo.qLvl = quality/10;
-    if (JpegInInfo.qLvl < 5)
-        JpegInInfo.qLvl = 5;
-    if(JpegInInfo.qLvl  > 10)
-        JpegInInfo.qLvl = 9;
-    //if not doThumb,please set doThumbNail,thumbW and thumbH to zero;
+    encInInfo.inputPhyAddr = srcBuf->dmaBufFd();
+    encInInfo.inputVirAddr = (unsigned char *)srcBuf->data();
+    encInInfo.width = jpegw;
+    encInInfo.height = jpegh;
+    encInInfo.format = MpiJpegEncoder::INPUT_FMT_YUV420SP;
+    encInInfo.qLvl = 8;
+    encInInfo.thumbQLvl = 8;
+    // if not doThumb,please set doThumbNail,thumbW and thumbH to zero;
     if (exifMeta->mJpegSetting.thumbWidth && exifMeta->mJpegSetting.thumbHeight)
-        JpegInInfo.doThumbNail = 1;
+        encInInfo.doThumbNail = 1;
     else
-        JpegInInfo.doThumbNail = 0;
+        encInInfo.doThumbNail = 0;
     LOGD("@%s : exifAttrs->enableThumb = %d doThumbNail=%d", __FUNCTION__,
-         exifAttrs->enableThumb, JpegInInfo.doThumbNail);
-    JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
-    JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
-    //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
-    JpegInInfo.thumbData = NULL;
-    JpegInInfo.thumbDataLen = 0; //don't care when thumbData is Null
-    JpegInInfo.thumbqLvl = thumbquality /10;
-    if (JpegInInfo.thumbqLvl < 5)
-        JpegInInfo.thumbqLvl = 5;
-    if(JpegInInfo.thumbqLvl  > 10)
-        JpegInInfo.thumbqLvl = 9;
+         exifAttrs->enableThumb, encInInfo.doThumbNail);
+    encInInfo.thumbWidth = exifMeta->mJpegSetting.thumbWidth;
+    encInInfo.thumbHeight = exifMeta->mJpegSetting.thumbHeight;
+    // if thumbData is NULL, do scale, the type above can not be 420_P or
+    // 422_UYVY MppJpegEncInInfo.thumbData = NULL; MppJpegEncInInfo.thumbDataLen
+    // = 0; //don't care when thumbData is Null
+    encInInfo.thumbQLvl = thumbquality / 10;
+    if (encInInfo.thumbQLvl < 5)
+        encInInfo.thumbQLvl = 5;
+    if (encInInfo.thumbQLvl > 10)
+        encInInfo.thumbQLvl = 10;
 
     fillRkExifInfo(mExifInfo, exifAttrs);
-    JpegInInfo.exifInfo = &mExifInfo;
+    mExifInfo.InputWidth = jpegw;
+    mExifInfo.InputHeight = jpegh;
+
+    encInInfo.exifInfo = &mExifInfo;
     if (exifAttrs->enableGps) {
         fillGpsInfo(mGpsInfo, exifAttrs);
-        JpegInInfo.gpsInfo = &mGpsInfo;
+        encInInfo.gpsInfo = &mGpsInfo;
     } else {
-        JpegInInfo.gpsInfo = NULL;
+        encInInfo.gpsInfo = NULL;
     }
 
-    JpegOutInfo.outBufPhyAddr = destBuf->dmaBufFd();
-    JpegOutInfo.outBufVirAddr = (unsigned char*)destBuf->data();
-    JpegOutInfo.outBuflen = outJPEGSize;
-    JpegOutInfo.jpegFileLen = 0;
-    JpegOutInfo.cacheflush = NULL;
+    encOutInfo.outputPhyAddr = destBuf->dmaBufFd();
+    encOutInfo.outputVirAddr = (unsigned char *)destBuf->data();
+    encOutInfo.outBufLen = outJPEGSize;
 
-    LOGI("@%s %d: JpegInInfo thumbW:%d, thumbH:%d, thumbqLvl:%d, inputW:%d, inputH:%d, qLvl:%d", __FUNCTION__, __LINE__,
-         JpegInInfo.thumbW, JpegInInfo.thumbH, JpegInInfo.thumbqLvl,
-         JpegInInfo.inputW, JpegInInfo.inputH, JpegInInfo.qLvl);
+    LOGI("MppJpegEncInInfo thumbWidth:%d, thumbHeight:%d, thumbQLvl:%d, "
+         "width:%d, height:%d, qLvl:%d",
+         encInInfo.thumbWidth, encInInfo.thumbHeight,
+         encInInfo.thumbQLvl, encInInfo.width,
+         encInInfo.height, encInInfo.qLvl);
 
-    if(hw_jpeg_encode(&JpegInInfo, &JpegOutInfo) < 0 || JpegOutInfo.jpegFileLen <= 0){
+    if (mEncoder->encode(&encInInfo, &encOutInfo) == false ||
+        encOutInfo.outBufLen <= 0) {
         LOGE("@%s %d: hw jpeg encode fail.", __FUNCTION__, __LINE__);
         return UNKNOWN_ERROR;
     }
-
-    LOGI("@%s %d: actual jpeg offset: %d, size: %d, destBuf size: %d ", __FUNCTION__, __LINE__, JpegOutInfo.finalOffset, JpegOutInfo.jpegFileLen, destBuf->size());
+    LOGI("@%s %d: actual jpeg size: %d, destBuf size: %d ", __FUNCTION__,
+         __LINE__, encOutInfo.outBufLen, destBuf->size());
 
     // save jpeg size at the end of file, App will detect this header for the
     // jpeg actual size
@@ -275,7 +269,7 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
             - sizeof(struct camera_jpeg_blob);
         struct camera_jpeg_blob *blob = new struct camera_jpeg_blob;
         blob->jpeg_blob_id = CAMERA_JPEG_BLOB_ID;
-        blob->jpeg_size = JpegOutInfo.jpegFileLen;
+        blob->jpeg_size = encOutInfo.outBufLen;
         STDCOPY(pCur, (int8_t *)blob, sizeof(struct camera_jpeg_blob));
         delete blob;
     } else {
