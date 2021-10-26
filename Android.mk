@@ -156,11 +156,11 @@ LOCAL_C_INCLUDES += \
     system/core/liblog/include \
     kernel/include/uapi \
     hardware/rockchip/librkvpu \
+    hardware/rockchip/jpeghw \
     hardware/rockchip/librga \
     external/libchrome \
     external/libdrm/include/drm \
-    $(LOCAL_PATH)/include/arc \
-    hardware/rockchip/libhwjpeg/inc
+    $(LOCAL_PATH)/include/arc
 
 # API 29 -> Android 10.0
 ifneq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \< 29)))
@@ -261,10 +261,10 @@ LOCAL_SHARED_LIBRARIES:= \
     libui \
     librkisp \
     libhardware \
+    libjpeghwenc \
     libvpu \
     libcamera_metadata \
-    librga \
-    libhwjpeg
+    librga
 
 ifneq (,$(findstring rk356x,$(TARGET_BOARD_PLATFORM)))
 ifeq ($(PRODUCT_HAVE_EPTZ),true)

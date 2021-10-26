@@ -25,11 +25,10 @@
 #include "EXIFMetaData.h"
 #include "Exif.h"
 #include "JpegMakerCore.h"
-#include "RkExifInfo.h"
-#include "MpiJpegEncoder.h"
 #ifdef CLIP
 #undef CLIP
 #endif
+#include "release/encode_release/hw_jpegenc.h"
 
 namespace android {
 namespace camera2 {
@@ -69,10 +68,9 @@ private:  /* Members */
     char sMaker[256];
     char sModel[256];
     int mCameraId;
-
-    MpiJpegEncoder *mEncoder;
     RkExifInfo mExifInfo;
     RkGPSInfo mGpsInfo;
+    vpu_display_mem_pool *mPool;
 };
 } // namespace camera2
 } // namespace android
