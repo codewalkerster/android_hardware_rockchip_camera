@@ -288,6 +288,33 @@ status_t MediaController::findMediaEntityById(int index, struct media_entity_des
     return NO_ERROR;
 }
 
+/**
+ * Find description for given entity shink name
+ *
+ * Using media controller here to query entity with given shink name.
+ */
+status_t MediaController::findMediaEntityByName(char* name, struct media_entity_desc &mediaEntityDesc)
+{
+    LOGI("@%s", __FUNCTION__);
+    status_t status = UNKNOWN_ERROR;
+
+    if (mEntityDesciptors.empty()) {
+        LOGE("No media descriptors");
+        return UNKNOWN_ERROR;
+    }
+
+    for (const auto &entityDesciptors : mEntityDesciptors) {
+        LOGE("entityDesciptors.first:%s",entityDesciptors.first.c_str());
+
+        if (strncmp(entityDesciptors.second.name, name, strlen(name)) == 0 &&
+                     entityDesciptors.second.name[strlen(name)] == '\0') {
+            ALOGE("@%s match:%s",__FUNCTION__,entityDesciptors.second.name);
+            return NO_ERROR;
+        }
+    }
+    return status;
+}
+
 status_t MediaController::setFormat(const MediaCtlFormatParams &formatParams)
 {
     LOGI("@%s entity %s pad %d (%dx%d) format(%d)", __FUNCTION__,
@@ -379,7 +406,7 @@ status_t MediaController::setControl(const char* entityName, int controlId, int 
  */
 status_t MediaController::configureLink(const MediaCtlLinkParams &linkParams)
 {
-    LOGI(" @%s: %s \"%s\":%d->\"%s\":%d[%d]", __FUNCTION__,
+    LOGI("%s @%s: %s \"%s\":%d->\"%s\":%d[%d]", mPath.c_str(),__FUNCTION__,
          linkParams.enable?"enable":"disable",
          linkParams.srcName.c_str(), linkParams.srcPad,
          linkParams.sinkName.c_str(), linkParams.sinkPad,linkParams.enable);

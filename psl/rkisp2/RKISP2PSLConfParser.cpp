@@ -1287,20 +1287,49 @@ std::string RKISP2PSLConfParser::getSensorMediaDevice(int cameraId)
     return "none";
 }
 
-std::string RKISP2PSLConfParser::getImguMediaDevice(int cameraId)
+std::string RKISP2PSLConfParser::getImguMediaDevice(int cameraId,std::shared_ptr<MediaController> sensorMediaCtl)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     std::vector<std::string> mediaDevicePaths;
     std::vector<std::string> mediaDevicePath;
-    std::vector<std::string> mediaDeviceNames {"rkisp1"};
+    std::vector<std::string> mediaDeviceNames {"rkisp1","rkisp0"};
     for (auto it : mediaDeviceNames) {
-       mediaDevicePath = getMediaDeviceByModuleName(it);
-       mediaDevicePaths.insert(mediaDevicePaths.end(), mediaDevicePath.begin(), mediaDevicePath.end());
+        mediaDevicePath = getMediaDeviceByModuleName(it);
+        LOGD("@%s : %s,mediaDevicePathSize:%d", __FUNCTION__,it.c_str(),mediaDevicePath.size());
+        for (auto itt : mediaDevicePath) {
+            LOGD("@%s : %s,mediaDevicePath:%s", __FUNCTION__,it.c_str(),itt.c_str());
+        }
+        if(mediaDevicePath.size()>0)
+            mediaDevicePaths.insert(mediaDevicePaths.end(), mediaDevicePath.begin(), mediaDevicePath.end());
     }
 
     if(mediaDevicePaths.size()>0){
-        return mediaDevicePaths[0];
+        for (auto it : mediaDevicePaths) {
+            std::shared_ptr<MediaController> mediaController = std::make_shared<MediaController>(it.c_str());
+            mediaController->init();
+            if (mediaController->init() != NO_ERROR) {
+                LOGE("Error initializing Media Controller");
+                continue;
+            }
+
+            media_device_info info;
+            int ret = sensorMediaCtl->getMediaDevInfo(info);
+            if (ret != OK) {
+                LOGE("Cannot get media device information.");
+            }
+            LOGD("sensorMediaCtl info.model:%s",info.model);
+
+            struct media_entity_desc entity;
+            status_t status = NO_ERROR;
+            status = mediaController->findMediaEntityByName(info.model, entity);
+            if(status == NO_ERROR){
+                //found entity by name
+                LOGD("found entity by name ,entity.info.name:%s",info.model);
+                return it;
+            }
+        }
     }
+    LOGD("@%s only one media",__FUNCTION__ );
 
     return getSensorMediaDevice(cameraId);
 }

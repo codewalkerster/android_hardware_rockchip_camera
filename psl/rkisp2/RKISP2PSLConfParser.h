@@ -38,7 +38,7 @@ public:
     static IPSLConfParser *getInstance(std::string &xmlConfigName, const std::vector<SensorDriverDescriptor>& sensorNames);
     static void deleteInstance();
     static std::string getSensorMediaDevice(int cameraId);
-    static std::string getImguMediaDevice(int cameraId);
+    static std::string getImguMediaDevice(int cameraId,std::shared_ptr<MediaController> sensorMediaCtl);
 
     virtual CameraCapInfo *getCameraCapInfo(int cameraId);
     virtual camera_metadata_t *constructDefaultMetadata(int cameraId, int reqTemplate);

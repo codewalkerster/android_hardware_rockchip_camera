@@ -675,9 +675,9 @@
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="4.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
-			<scaler.availableStreamConfigurations value="
-				BLOB,4096x3136,OUTPUT,
-				BLOB,2112x1568,OUTPUT,
+	    <scaler.availableStreamConfigurations value="
+		BLOB,4224x3136,OUTPUT,
+		BLOB,2112x1568,OUTPUT,
                 BLOB,1920x1080,OUTPUT,
                 BLOB,1280x960,OUTPUT,
                 BLOB,1280x720,OUTPUT,
@@ -685,7 +685,8 @@
                 BLOB,352x288,OUTPUT,
                 BLOB,320x240,OUTPUT,
                 BLOB,176x144,OUTPUT,
-                YCbCr_420_888,2112x1568,OUTPUT,
+                YCbCr_420_888,4224x3136,OUTPUT,
+		YCbCr_420_888,2112x1568,OUTPUT,
                 YCbCr_420_888,1920x1080,OUTPUT,
                 YCbCr_420_888,1280x960,OUTPUT,
                 YCbCr_420_888,1280x720,OUTPUT,
@@ -693,6 +694,7 @@
                 YCbCr_420_888,352x288,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
                 YCbCr_420_888,176x144,OUTPUT,
+		IMPLEMENTATION_DEFINED,4224x3136,OUTPUT,
                 IMPLEMENTATION_DEFINED,2112x1568,OUTPUT,
                 IMPLEMENTATION_DEFINED,1920x1080,OUTPUT,
                 IMPLEMENTATION_DEFINED,1280x960,OUTPUT,
@@ -701,9 +703,9 @@
                 IMPLEMENTATION_DEFINED,352x288,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
                 IMPLEMENTATION_DEFINED,176x144,OUTPUT"/>
-			<scaler.availableMinFrameDurations value="
-				BLOB,4096x3136,150000000,
-				BLOB,2112x1568,33333333,
+		<scaler.availableMinFrameDurations value="
+		BLOB,4224x3136,33333333,
+		BLOB,2112x1568,33333333,
                 BLOB,1920x1080,33333333,
                 BLOB,1280x960,33333333,
                 BLOB,1280x720,33333333,
@@ -711,11 +713,13 @@
                 BLOB,352x288,33333333,
                 BLOB,320x240,33333333,
                 BLOB,176x144,33333333,
+		YCbCr_420_888,4224x3136,33333333,
                 YCbCr_420_888,2112x1568,33333333,
                 YCbCr_420_888,1920x1080,33333333,
                 YCbCr_420_888,1280x960,33333333,
                 YCbCr_420_888,1280x720,33333333,
                 YCbCr_420_888,640x480,33333333,
+		IMPLEMENTATION_DEFINED,4224x3136,33333333,
                 IMPLEMENTATION_DEFINED,2112x1568,33333333,
                 IMPLEMENTATION_DEFINED,1920x1080,33333333,
                 IMPLEMENTATION_DEFINED,1280x960,33333333,
@@ -724,16 +728,16 @@
                 IMPLEMENTATION_DEFINED,352x288,33333333,
                 IMPLEMENTATION_DEFINED,320x240,33333333,
                 IMPLEMENTATION_DEFINED,176x144,33333333" />
-			<scaler.availableStallDurations value="
-												   BLOB,4096x3136,150000000,
-												   BLOB,2112x1568,33333333,
-                                                   BLOB,1920x1080,33333333,
-                                                   BLOB,1280x960,33333333,
-                                                   BLOB,1280x720,33333333,
-                                                   BLOB,640x480,33333333,
-                                                   BLOB,352x288,33333333,
-                                                   BLOB,320x240,33333333,
-                                                   BLOB,176x144,33333333" />
+		<scaler.availableStallDurations value="
+					   BLOB,4224x3136,33333333,
+					   BLOB,2112x1568,33333333,
+                                           BLOB,1920x1080,33333333,
+                                           BLOB,1280x960,33333333,
+                                           BLOB,1280x720,33333333,
+                                           BLOB,640x480,33333333,
+                                           BLOB,352x288,33333333,
+                                           BLOB,320x240,33333333,
+                                           BLOB,176x144,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,4224,3136"/>
@@ -749,7 +753,7 @@
             <sensor.baseGainFactor value="0,1"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <sensor.blackLevelPattern value="0,0,0,0"/>
             <sensor.maxAnalogSensitivity value="2400"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.orientation value="90"/>
+            <sensor.orientation value="0"/>
             <sensor.profileHueSatMapDimensions value="0,0,0"/>
             <sensor.availableTestPatternModes value="OFF,COLOR_BARS"/>
             <!-- Info -->
