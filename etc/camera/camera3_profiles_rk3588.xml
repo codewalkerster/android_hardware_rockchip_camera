@@ -482,7 +482,7 @@
             <sensor.baseGainFactor value="0,1"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <sensor.blackLevelPattern value="0,0,0,0"/>
             <sensor.maxAnalogSensitivity value="2400"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.orientation value="270"/>
+            <sensor.orientation value="0"/>
             <sensor.profileHueSatMapDimensions value="0,0,0"/>
             <sensor.availableTestPatternModes value="OFF,COLOR_BARS"/>
             <!-- Info -->
@@ -517,11 +517,11 @@
         <Hal_tuning_RKISP1> <!-- Parameters to tune the HAL and hacks for the HAL that are camera dependent -->
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
-            <supportTuningSize value="8192x6144"/>
+            <supportTuningSize value="8192x6144, 4096x3072"/>
         </Hal_tuning_RKISP1>
 
         <Sensor_info_RKISP1> <!-- Information that parametrizes the behavior or qualities of the physical sensor -->
-            <sensorType value="SENSOR_TYPE_SOC"/> <!-- SENSOR_TYPE_SOC or SENSOR_TYPE_RAW -->
+            <sensorType value="SENSOR_TYPE_RAW"/> <!-- SENSOR_TYPE_SOC or SENSOR_TYPE_RAW -->
             <exposure.sync value="true"/> <!-- compensate expsure sync-->
             <sensor.digitalGain value="true"/> <!-- digital gain support on sensor-->
             <gain.lag value="2"/> <!-- camera3 HAL CPF parameters moved here start-->
