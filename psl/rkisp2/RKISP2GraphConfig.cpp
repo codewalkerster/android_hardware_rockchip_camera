@@ -2712,8 +2712,8 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         select.flags = 0;
         select.r.left = (ispOutWidth - mpInWidth) / 2;
         select.r.top = (ispOutHeight - mpInHeight) / 2;
-        select.r.width = mpInWidth;
-        select.r.height = mpInHeight;
+        select.r.width = mpInWidth & (~15);
+        select.r.height = mpInHeight & (~7);
         if(!mMpOutputRaw) {
             //for the case: isp output size < app stream size, select isp output
             //size as the vidoe node out output size, may happen in tuning dump raw case
@@ -2729,8 +2729,8 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         } else {
             select.r.left = 0;
             select.r.top = 0;
-            select.r.width = ispOutWidth;
-            select.r.height = ispOutHeight;
+            select.r.width = ispOutWidth & (~15);
+            select.r.height = ispOutHeight & (~7);
             addSelectionVideoParams(mpName, select, mediaCtlConfig);
             addFormatParams(mpName, ispOutWidth, ispOutHeight, mpSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
         }
@@ -2760,8 +2760,8 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
             select.flags = 0;
             select.r.left = (ispOutWidth - spInWidth) / 2;
             select.r.top = (ispOutHeight - spInHeight) / 2;
-            select.r.width = spInWidth;
-            select.r.height = spInHeight;
+            select.r.width = spInWidth & (~15);
+            select.r.height = spInHeight & (~7);
             //for the case: isp output size < app stream size, select isp output
             //size as the vidoe node out output size, may happen in tuning dump raw case
             uint32_t videoWidth = spInWidth;
@@ -2932,8 +2932,8 @@ status_t RKISP2GraphConfig::getImguMediaCtlData(int32_t cameraId,
                 select.flags = 0;
                 select.r.left = (ispOutWidth - nodeWidth) / 2;
                 select.r.top = (ispOutHeight - nodeHeight) / 2;
-                select.r.width = nodeWidth;
-                select.r.height = nodeHeight;
+                select.r.width = nodeWidth & (~15);
+                select.r.height = nodeHeight & (~7);
                 addSelectionVideoParams(name.c_str(), select, mediaCtlConfig);
                 LOGD("pipe log name: %s  crop size %dx%d", name.c_str(), nodeWidth, nodeHeight);
             }
