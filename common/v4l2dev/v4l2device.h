@@ -324,6 +324,7 @@ public:
 
     status_t queryDvTimings(struct v4l2_dv_timings &timings);
     status_t queryFormats(int pad, std::vector<uint32_t> &formats);
+    status_t getFormat(struct v4l2_subdev_format &aFormat);
     status_t setFormat(int pad, int width, int height, int formatCode, int field, int quantization);
     status_t getSelection(struct v4l2_subdev_selection &aSelection);
     status_t setSelection(int pad, int target, int top, int left, int width, int height);
@@ -333,7 +334,6 @@ public:
     status_t getSensorFormats(int pad, uint32_t code, std::vector<struct v4l2_subdev_frame_size_enum> &fse);
 private:
     status_t setFormat(struct v4l2_subdev_format &aFormat);
-    status_t getFormat(struct v4l2_subdev_format &aFormat);
     status_t setSelection(struct v4l2_subdev_selection &aSelection);
     status_t setFrameInterval(struct v4l2_subdev_frame_interval &finterval);
 private:
