@@ -31,14 +31,20 @@ namespace camera2 {
 #define RGA_VIRTUAL_W (4096)
 #define RGA_ACTIVE_H (2048)
 #define RGA_VIRTUAL_H (2048)
-
+#else
+#if defined(TARGET_RK3588)
+#define RGA_VER (3.0)
+#define RGA_ACTIVE_W (8128)
+#define RGA_VIRTUAL_W (8128)
+#define RGA_ACTIVE_H (8128)
+#define RGA_VIRTUAL_H (8128)
 #else
 #define RGA_VER (2.0)
 #define RGA_ACTIVE_W (4096)
 #define RGA_VIRTUAL_W (4096)
 #define RGA_ACTIVE_H (4096)
 #define RGA_VIRTUAL_H (4096)
-
+#endif
 #endif
 
 int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
@@ -70,7 +76,7 @@ int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
         return -1;
     }
 	RockchipRga& rkRga(RockchipRga::get());
-	
+
 	if (in->fd == -1) {
 		src.fd = -1;
 		src.virAddr = (void*)in->vir_addr;

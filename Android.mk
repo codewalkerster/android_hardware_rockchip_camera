@@ -213,6 +213,10 @@ ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3126c)
 LOCAL_CFLAGS += -DTARGET_RK312X
 endif
 
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3588)
+	LOCAL_CFLAGS += -DTARGET_RK3588
+endif
+
 ifeq ($(strip $(Have3AControlLoop)), true)
 CPPHACKS += \
     -DHAVE_3A_CONTROL_LOOP
