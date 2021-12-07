@@ -403,7 +403,7 @@
             <scaler.availableMaxDigitalZoom value="4.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="
-                BLOB,8192x6144,OUTPUT,
+                BLOB,8128x6144,OUTPUT,
                 BLOB,4096x3072,OUTPUT,
                 BLOB,3264x2448,OUTPUT,
                 BLOB,2592x1944,OUTPUT,
@@ -432,7 +432,7 @@
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
                 IMPLEMENTATION_DEFINED,176x144,OUTPUT"/>
             <scaler.availableMinFrameDurations value="
-                BLOB,8192x6144,83333333,
+                BLOB,8128x6144,83333333,
                 BLOB,4096x3072,33333333,
                 BLOB,3264x2448,33333333,
                 BLOB,2592x1944,33333333,
@@ -461,7 +461,7 @@
                 IMPLEMENTATION_DEFINED,320x240,33333333,
                 IMPLEMENTATION_DEFINED,176x144,33333333" />
             <scaler.availableStallDurations value="
-                                                   BLOB,8192x6144,83333333,
+                                                   BLOB,8128x6144,83333333,
                                                    BLOB,4096x3072,33333333,
                                                    BLOB,3264x2448,33333333,
                                                    BLOB,2592x1944,33333333,
