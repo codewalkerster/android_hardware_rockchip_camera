@@ -39,8 +39,13 @@ namespace android {
 namespace camera2 {
 namespace rkisp2 {
 // mainPath output capacity
+#if defined(TARGET_RK3588)
 #define MP_MAX_WIDTH        8192
 #define MP_MAX_HEIGHT       6144
+#else
+#define MP_MAX_WIDTH        4416
+#define MP_MAX_HEIGHT       3312
+#endif
 // selfPath output capacity
 #define SP_MAX_WIDTH        1920
 #define SP_MAX_HEIGHT       1920
@@ -48,7 +53,11 @@ namespace rkisp2 {
 #if defined(TARGET_RK312X)
 #define PP_MAX_WIDTH        2048
 #else
+#if defined(TARGET_RK3588)
+#define PP_MAX_WIDTH        8128
+#else
 #define PP_MAX_WIDTH        4096
+#endif
 #endif
 
 #define NODE_NAME(x) (getNodeName(x).c_str())
