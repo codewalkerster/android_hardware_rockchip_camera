@@ -2573,6 +2573,7 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
     string statsName = "none";
     string paramName = "none";
     string fbcpathName = "none";
+    string scaleName = "none";
     std::vector<std::string> elementNames;
     PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
     struct v4l2_dv_timings timings;
@@ -2616,6 +2617,8 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
             paramName = it;
         if (it.find("fbcpath") != std::string::npos)
             fbcpathName = it;
+        if (it.find("scale_ch") != std::string::npos)
+            scaleName = it;
     }
     LOGD("%s: mipName = %s", __FUNCTION__, mipName.c_str());
     LOGD("%s: mipName2 = %s", __FUNCTION__, mipName2.c_str());
@@ -2627,6 +2630,7 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
     LOGD("%s: statsName = %s", __FUNCTION__, statsName.c_str());
     LOGD("%s: paramName = %s", __FUNCTION__, paramName.c_str());
     LOGD("%s: fbcpathName = %s", __FUNCTION__, fbcpathName.c_str());
+    LOGD("%s: scaleName = %s", __FUNCTION__, scaleName.c_str());
 
     int ispOutWidth, ispInWidth ,ispOutHeight, ispInHeight;
     uint32_t ispOutFormat ,ispInFormat, videoOutFormat;
@@ -2673,8 +2677,16 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
 
                 addLinkParams("rkisp-isp-subdev", 2, "rkisp_mainpath", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
                 addLinkParams("rkisp-isp-subdev", 2, "rkisp_selfpath", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            } else {
+                addLinkParams(mipName, mipSrcPad, mipName2, csiSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 1, "stream_cif_mipi_id0", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 2, "stream_cif_mipi_id1", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 3, "stream_cif_mipi_id2", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 4, "stream_cif_mipi_id3", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                mSensorLinkedToCIF = true;
             }
-	    }else if ((std::string(info.model).find("lvds")!= std::string::npos)&&(mipName.find("dphy") != std::string::npos) && (mipName2.find("mipi") != std::string::npos)) {
+	    }else if ((std::string(info.model).find("lvds")!= std::string::npos)&&(mipName.find("dphy") != std::string::npos)
+            && (mipName2.find("mipi") != std::string::npos) && scaleName.find("scale") != std::string::npos) {
             //for rk3588
             if(aFormat.format.code == MEDIA_BUS_FMT_UYVY8_2X8) {
                 addLinkParams(mipName, mipSrcPad, mipName2, csiSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
@@ -2705,7 +2717,16 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
                 addLinkParams("rkisp-isp-subdev", 2, "rkisp_selfpath", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
                 // addLinkParams("rkisp-isp-subdev", 2, "rkisp_fbcpath", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
             }
-	    }else {
+	    } else if ((std::string(info.model).find("lvds")!= std::string::npos)&&(mipName.find("dphy0") != std::string::npos)
+            && (mipName2.find("mipi") != std::string::npos) && aFormat.format.code == MEDIA_BUS_FMT_UYVY8_2X8) {
+            //for rk356x soc sensor
+                addLinkParams(mipName, mipSrcPad, mipName2, csiSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 1, "stream_cif_mipi_id0", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 2, "stream_cif_mipi_id1", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 3, "stream_cif_mipi_id2", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                addLinkParams(mipName2, 4, "stream_cif_mipi_id3", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                mSensorLinkedToCIF = true;
+        }else {
             addLinkParams(mipName, mipSrcPad, csiName, csiSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
             addLinkParams(csiName, csiSrcPad, IspName, ispSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
             addLinkParams(csiName, 2, "rkisp_rawwr0", 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
