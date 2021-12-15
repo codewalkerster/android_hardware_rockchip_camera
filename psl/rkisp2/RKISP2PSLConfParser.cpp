@@ -70,7 +70,7 @@ RKISP2PSLConfParser::RKISP2PSLConfParser(std::string& xmlName, const std::vector
     mSensorIndex  = -1;
     getPSLDataFromXmlFile();
     // Uncomment to display all the parsed values
-    //dump();
+    dump();
 }
 
 RKISP2PSLConfParser::~RKISP2PSLConfParser()
@@ -905,13 +905,13 @@ void RKISP2PSLConfParser::checkField(const char *name, const char **atts)
         if (atts[2] && (strcmp(atts[2], "name") == 0)) {
             if (atts[3]) {
                 sensorName = atts[3];
+                mUseProfile = isSensorPresent(sensorName, atts[5]);
+                if (mUseProfile)
+                    mSensorIndex++;
                 LOGI("@%s: mSensorIndex = %d, name = %s",
                         __FUNCTION__,
                         mSensorIndex,
                         sensorName.c_str());
-                mUseProfile = isSensorPresent(sensorName, atts[5]);
-                if (mUseProfile)
-                    mSensorIndex++;
             } else {
                 LOGE("No name provided for camera id[%d], fix your XML- FATAL",
                       mSensorIndex);
@@ -926,7 +926,6 @@ void RKISP2PSLConfParser::checkField(const char *name, const char **atts)
             }
             addCamera(mSensorIndex, sensorName, atts[5]);
         }
-
     } else if (!strcmp(name, "Hal_tuning_RKISP1")) {
         mCurrentDataField = FIELD_HAL_TUNING_RKISP1;
     } else if (!strcmp(name, "Sensor_info_RKISP1")) {
@@ -1293,20 +1292,22 @@ std::string RKISP2PSLConfParser::getImguMediaDevice(int cameraId,std::shared_ptr
     std::vector<std::string> mediaDevicePaths;
     std::vector<std::string> mediaDevicePath;
     std::vector<std::string> mediaDeviceNames {"rkisp1","rkisp0"};
-    for (auto it : mediaDeviceNames) {
-        mediaDevicePath = getMediaDeviceByModuleName(it);
-        LOGD("@%s : %s,mediaDevicePathSize:%d", __FUNCTION__,it.c_str(),mediaDevicePath.size());
-        for (auto itt : mediaDevicePath) {
-            LOGD("@%s : %s,mediaDevicePath:%s", __FUNCTION__,it.c_str(),itt.c_str());
-        }
-        if(mediaDevicePath.size()>0)
-            mediaDevicePaths.insert(mediaDevicePaths.end(), mediaDevicePath.begin(), mediaDevicePath.end());
-    }
+//    for (auto it : mediaDeviceNames) {
+//        mediaDevicePath = getMediaDeviceByModuleName(it);
+//        LOGD("@%s : %s,mediaDevicePathSize:%d", __FUNCTION__,it.c_str(),mediaDevicePath.size());
+//        for (auto itt : mediaDevicePath) {
+//            LOGD("@%s : %s,mediaDevicePath:%s", __FUNCTION__,it.c_str(),itt.c_str());
+//        }
+//        if(mediaDevicePath.size()>0)
+//            mediaDevicePaths.insert(mediaDevicePaths.end(), mediaDevicePath.begin(), mediaDevicePath.end());
+//    }
+    mediaDevicePaths = getMediaDeviceByModuleNames(mediaDeviceNames);
 
     if(mediaDevicePaths.size()>0){
         for (auto it : mediaDevicePaths) {
             std::shared_ptr<MediaController> mediaController = std::make_shared<MediaController>(it.c_str());
-            mediaController->init();
+            //init twice, disable this
+            //mediaController->init();
             if (mediaController->init() != NO_ERROR) {
                 LOGE("Error initializing Media Controller");
                 continue;
@@ -1544,6 +1545,74 @@ std::vector<std::string> RKISP2PSLConfParser::getMediaDeviceByModuleName(std::st
     return mediaDevicePath;
 }
 
+std::vector<std::string> RKISP2PSLConfParser::getMediaDeviceByModuleNames
+(
+    const std::vector<std::string> &moduleNames
+)
+{
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    for (auto it : moduleNames)
+        LOGI("@%s, Target name: %s", __FUNCTION__, it.c_str());
+    const char *MEDIADEVICES = "media";
+    const char *DEVICE_PATH = "/dev/";
+
+    std::vector<std::string> mediaDevicePath;
+    DIR *dir;
+    dirent *dirEnt;
+
+    std::vector<std::string> candidates;
+
+    candidates.clear();
+    if ((dir = opendir(DEVICE_PATH)) != nullptr) {
+        while ((dirEnt = readdir(dir)) != nullptr) {
+            std::string candidatePath = dirEnt->d_name;
+            std::size_t pos = candidatePath.find(MEDIADEVICES);
+            if (pos != std::string::npos) {
+                LOGD("Found media device candidate: %s", candidatePath.c_str());
+                std::string found_one = DEVICE_PATH;
+                found_one += candidatePath;
+                candidates.push_back(found_one);
+            }
+        }
+        closedir(dir);
+    } else {
+        LOGW("Failed to open directory: %s", DEVICE_PATH);
+    }
+
+    status_t retVal = NO_ERROR;
+    // let media0 place before media1
+    std::sort(candidates.begin(), candidates.end());
+    for (const auto &candidate : candidates) {
+        MediaController controller(candidate.c_str());
+        retVal = controller.init();
+
+        // We may run into devices that this HAL won't use -> skip to next
+        if (retVal == PERMISSION_DENIED) {
+            LOGD("Not enough permissions to access %s.", candidate.c_str());
+            continue;
+        }
+
+        media_device_info info;
+        int ret = controller.getMediaDevInfo(info);
+        if (ret != OK) {
+            LOGE("Cannot get media device information.");
+            return mediaDevicePath;
+        }
+
+        for (auto it : moduleNames) {
+            LOGI("@%s, Target name: %s, candidate name: %s ", __FUNCTION__, it.c_str(), info.model);
+            if (strncmp(info.model, it.c_str(),
+                    MIN(sizeof(info.model),
+                    it.size())) == 0) {
+                LOGD("Found device(%s) that matches: %s", candidate.c_str(), it.c_str());
+                mediaDevicePath.push_back(candidate);
+            }
+        }
+    }
+
+    return mediaDevicePath;
+}
+
 void RKISP2PSLConfParser::dumpHalTuningSection(int cameraId)
 {
     LOGD("@%s", __FUNCTION__);
@@ -1588,9 +1657,11 @@ void RKISP2PSLConfParser::dump()
 {
     LOGD("===========================@%s======================", __FUNCTION__);
     for (unsigned int i = 0; i < mCaps.size(); i++) {
+        LOGD("Dump camera: %d info start.", i);
         dumpHalTuningSection(i);
         dumpSensorInfoSection(i);
         dumpMediaCtlElementsSection(i);
+        LOGD("Dump camera: %d info end.", i);
     }
 
     LOGD("===========================end======================");

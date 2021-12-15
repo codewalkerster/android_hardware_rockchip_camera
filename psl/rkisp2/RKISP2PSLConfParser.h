@@ -68,6 +68,7 @@ public:
     static std::vector<std::string> getMediaDeviceByName(std::string deviceName);
     static std::vector<std::string> getMediaDeviceByModuleName(std::string moduleName);
     static std::vector<std::string> getMediaDeviceByNames(const std::vector<std::string> &driverNames);
+    static std::vector<std::string> getMediaDeviceByModuleNames(const std::vector<std::string> &moduleName);
 
 // disable copy constructor and assignment operator
 private:

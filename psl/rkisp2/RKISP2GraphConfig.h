@@ -395,6 +395,8 @@ public:
      * available output frame size
      */
     void cal_crop(uint32_t &src_w, uint32_t &src_h, uint32_t &dst_w, uint32_t &dst_h);
+    int get_reso_dist(camera3_stream_t* stream, uint32_t max_width, uint32_t max_height);
+    uint32_t find_best_fit_format(camera3_stream_t* stream);
     status_t selectSensorOutputFormat(int32_t cameraId, int &w, int &h, uint32_t &format);
     string getSinkEntityName(std::shared_ptr<MediaEntity> entity, int port);
     status_t getSensorMediaCtlConfig(int32_t cameraId,

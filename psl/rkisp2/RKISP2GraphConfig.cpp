@@ -29,7 +29,6 @@
 #include <linux/v4l2-subdev.h>
 #include <algorithm>
 #include "FormatUtils.h"
-
 #include "MediaEntity.h"
 
 using GCSS::GraphConfigNode;
@@ -2257,16 +2256,21 @@ void RKISP2GraphConfig::isNeedPathCrop(uint32_t path_input_w,
                              bool& sp_need_crop) {
     // filter the same size
     std::vector<camera3_stream_t*> filterStream;
+    int i = 0;
     for (auto s : outputStream) {
         bool filter = false;
+        LOGD("@ %s : outputStream(%d), width-height(%dx%d)",
+            __FUNCTION__, i, s->width , s->height);
         for (auto f : filterStream) {
             if (s->width == f->width &&
                 s->height == f->height) {
                 filter = true;
                 break;
             }
+            LOGD("@ %s : filterStream, width-height(%dx%d)",
+                __FUNCTION__, f->width , f->height);
         }
-
+        i++;
         if (!filter)
             filterStream.push_back(s);
     }
@@ -2326,6 +2330,35 @@ void RKISP2GraphConfig::cal_crop(uint32_t &src_w, uint32_t &src_h, uint32_t &dst
          ratio_src, ratio_dst,src_w, src_h, dst_w, dst_h);
 }
 
+int RKISP2GraphConfig::get_reso_dist(camera3_stream_t* stream, uint32_t max_width, uint32_t max_height)
+{
+    return abs(int(stream->width - max_width)) +
+           abs(int(stream->height - max_height));
+}
+
+uint32_t RKISP2GraphConfig::find_best_fit_format(camera3_stream_t* stream)
+{
+    std::vector<struct SensorFrameSize> frameSize;
+    int dist;
+    uint32_t cur_best_fit = 0;
+    int cur_best_fit_dist = -1;
+
+    LOGD("@%s : request stream:(%dx%d).", __FUNCTION__, stream->width, stream->height);
+    for (auto itf = mAvailableSensorFormat.begin(); itf != mAvailableSensorFormat.end(); ++itf) {
+        frameSize = itf->second;
+        // travel the frameSize from small to large to get the suitable sensor output
+        for (auto it = frameSize.begin(); it != frameSize.end(); ++it) {
+            dist = get_reso_dist(stream, it->max_width, it->max_height);
+            if ((cur_best_fit_dist == -1 || dist < cur_best_fit_dist)) {
+                cur_best_fit_dist = dist;
+                cur_best_fit = itf->first;
+            }
+        }
+    }
+    LOGD("@%s : cur_best_fit(0x%x).", __FUNCTION__, cur_best_fit);
+    return cur_best_fit;
+}
+
 status_t RKISP2GraphConfig::selectSensorOutputFormat(int32_t cameraId, int &w, int &h, uint32_t &format) {
     camera3_stream_t* stream = NULL;
     w = h = 0;
@@ -2358,7 +2391,9 @@ status_t RKISP2GraphConfig::selectSensorOutputFormat(int32_t cameraId, int &w, i
 
     // default sensor Mbus code
     /* TODO  add format select logic, now just pick the first one*/
-    format = mAvailableSensorFormat.begin()->first;
+    /* Find sensor best fit format*/
+    //format = mAvailableSensorFormat.begin()->first;
+    format = find_best_fit_format(stream);
 
     const RKISP2CameraCapInfo *cap = getRKISP2CameraCapInfo(cameraId);
     const std::vector<struct FrameSize_t>& tuningSupportSize = cap->getSupportTuningSizes();
@@ -2430,6 +2465,7 @@ status_t RKISP2GraphConfig::getSensorMediaCtlConfig(int32_t cameraId,
                                           int32_t testPatternMode,
                                           MediaCtlConfig *mediaCtlConfig) {
     status_t ret = OK;
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
     string sensorEntityName = "none";
     ret = PlatformData::getCameraHWInfo()->getSensorEntityName(cameraId, sensorEntityName);
@@ -2448,6 +2484,7 @@ status_t RKISP2GraphConfig::getSensorMediaCtlConfig(int32_t cameraId,
         LOGE("@%s, fail to get sensor(%s) MediaEntity", __FUNCTION__, sensorEntityName.c_str());
         return UNKNOWN_ERROR;
     }
+
     std::vector<media_link_desc> links;
     sensorEntity->getLinkDesc(links);
     if (links.size()) {
@@ -2498,6 +2535,7 @@ status_t RKISP2GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
                                           MediaCtlConfig *mediaCtlConfig,
                                           std::vector<camera3_stream_t*>& outputStream)
 {
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     //CIF isp
     if (mSensorLinkedToCIF) {
         LOGI("@%s : sensor link to cif", __FUNCTION__);
@@ -2805,6 +2843,7 @@ status_t RKISP2GraphConfig::getImguMediaCtlData(int32_t cameraId,
                                           MediaCtlConfig *mediaCtlConfigVideo,
                                           MediaCtlConfig *mediaCtlConfigStill)
 {
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     CheckError((!mediaCtlConfig || !mediaCtlConfigVideo || !mediaCtlConfigStill), \
                BAD_VALUE, "@%s null ptr\n", __FUNCTION__);
 
@@ -3139,7 +3178,7 @@ status_t RKISP2GraphConfig::getValue(string &nodeName, uint32_t id, int &value)
  * Dump contents of mediaCtlConfig struct
  */
 void RKISP2GraphConfig::dumpMediaCtlConfig(const MediaCtlConfig &config) const {
-
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     size_t i = 0;
     LOGD("MediaCtl config w=%d ,height=%d"
         ,config.mCameraProps.outputWidth,
