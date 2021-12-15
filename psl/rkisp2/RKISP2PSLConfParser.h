@@ -67,6 +67,7 @@ public:
     static std::vector<std::string> getSensorMediaDevicePath();
     static std::vector<std::string> getMediaDeviceByName(std::string deviceName);
     static std::vector<std::string> getMediaDeviceByModuleName(std::string moduleName);
+    static std::vector<std::string> getMediaDeviceByNames(const std::vector<std::string> &driverNames);
 
 // disable copy constructor and assignment operator
 private:
