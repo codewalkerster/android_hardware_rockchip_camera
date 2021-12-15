@@ -162,6 +162,8 @@ struct SensorDriverDescriptor {
 };
 
 struct SensorFrameSize {
+    uint32_t left;
+    uint32_t top;
     uint32_t min_width;
     uint32_t min_height;
     uint32_t max_width;
