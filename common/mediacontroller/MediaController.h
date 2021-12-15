@@ -79,6 +79,7 @@ private:
     media_device_info                               mDeviceInfo;        /*!< media controller device info */
     /*!< media entity descriptors, Key: entity name */
     std::map<std::string, struct media_entity_desc> mEntityDesciptors;
+    std::map<uint32_t, struct media_entity_desc> mEntityIdDesciptors;
     /*!< MediaEntities, Key: entity name */
     std::map<std::string, std::shared_ptr<MediaEntity>>  mEntities;
 
