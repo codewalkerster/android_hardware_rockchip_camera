@@ -71,7 +71,11 @@
 #define MAX_SUBDEV_ENUMERATE    256
 
 /* These should be read from the platform configure file */
+#if defined(TARGET_RK3588)
+#define MAX_CAMERAS 6
+#else
 #define MAX_CAMERAS 2
+#endif
 #define BACK_CAMERA_ID 0
 #define FRONT_CAMERA_ID 1
 
