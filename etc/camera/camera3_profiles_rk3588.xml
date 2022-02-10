@@ -1883,7 +1883,7 @@
             <control.availableVideoStabilizationModes value="OFF"/>
             <control.maxRegions value="1,0,1"/>
             <!-- JPEG -->
-            <jpeg.maxSize value="6128640"/>  <!-- 2688*1520*1.5 -->
+            <jpeg.maxSize value="19693440"/>  <!-- 4208*3120*1.5 -->
             <jpeg.availableThumbnailSizes value="0,0,160,120,320,180,320,240"/> <!-- INCREASING ORDER -->
             <!-- Lens Info-->
             <!-- TODO: availableApertures now is fake for we do not get the real apertures -->
@@ -2063,7 +2063,7 @@
             <sensor.baseGainFactor value="0,1"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <sensor.blackLevelPattern value="0,0,0,0"/>
             <sensor.maxAnalogSensitivity value="2400"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.orientation value="270"/>
+            <sensor.orientation value="0"/>
             <sensor.profileHueSatMapDimensions value="0,0,0"/>
             <sensor.availableTestPatternModes value="OFF,COLOR_BARS"/>
             <!-- Info -->
