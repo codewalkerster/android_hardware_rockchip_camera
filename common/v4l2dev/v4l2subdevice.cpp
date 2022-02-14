@@ -311,7 +311,7 @@ status_t V4L2Subdevice::setFrameInterval(struct v4l2_subdev_frame_interval &fint
         finterval.interval.denominator);
     ret = pbxioctl(VIDIOC_SUBDEV_S_FRAME_INTERVAL, &finterval);
     if (ret < 0) {
-        LOGE("VIDIOC_SUBDEV_S_FRAME_INTERVAL failed: %s", strerror(errno));
+        LOGW("VIDIOC_SUBDEV_S_FRAME_INTERVAL failed: %s", strerror(errno));
         return UNKNOWN_ERROR;
     }
 
@@ -347,7 +347,7 @@ status_t V4L2Subdevice::getSensorFrameDuration(int32_t &duration)
 
     ret = pbxioctl(VIDIOC_SUBDEV_G_FRAME_INTERVAL, &finterval);
     if (ret < 0) {
-        LOGE("VIDIOC_SUBDEV_S_FRAME_INTERVAL failed: %s", strerror(errno));
+        LOGW("VIDIOC_SUBDEV_G_FRAME_INTERVAL failed: %s", strerror(errno));
         return UNKNOWN_ERROR;
     }
     duration = 1000 * finterval.interval.numerator / finterval.interval.denominator;
