@@ -174,6 +174,7 @@ struct SensorFrameSize {
     uint32_t max_height;
 };
 typedef std::map<uint32_t, std::vector<struct SensorFrameSize>> SensorFormat;
+typedef std::map<int32_t, SensorFormat> IndexSensorOutputFormats;
 
 enum ExtensionGroups {
     CAPABILITY_NONE = 0,
@@ -217,7 +218,7 @@ public:
     status_t getSensorEntityName(int32_t cameraId,
                                  std::string &sensorEntityName) const;
     status_t getAvailableSensorOutputFormats(int32_t cameraId,
-                                     SensorFormat &OutputFormats) const;
+                                     SensorFormat &OutputFormats, bool isFirst = false) const;
     status_t getSensorBayerPattern(int32_t cameraId,
                                    int32_t &bayerPattern) const;
     status_t getSensorFrameDuration(int32_t cameraId, int32_t &duration) const;
@@ -228,6 +229,7 @@ public:
     std::string getFullMediaCtlElementName(const std::vector<std::string> elementNames,
                                            const char *value) const;
     const struct SensorDriverDescriptor* getSensorDrvDes(int32_t cameraId) const;
+    status_t initAvailableSensorOutputFormats(void);
 
     std::string mProductName;
     std::string mManufacturerName;
@@ -244,6 +246,8 @@ public:
     bool mHasMediaController; // TODO: REMOVE. WA to overcome BXT MC-related issue with camera ID <-> ISP port
     media_device_info mDeviceInfo;
     std::vector<struct SensorDriverDescriptor> mSensorInfo;
+    IndexSensorOutputFormats mSensorOutputFormats;
+
 private:
     // the below functions are used to init the mSensorInfo
     status_t initDriverList();

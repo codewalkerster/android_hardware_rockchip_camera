@@ -569,7 +569,7 @@ void PlatformData::init()
         deinit();
         return;
     }
-
+    mCameraHWInfo->initAvailableSensorOutputFormats();
     int numberOfCameras = PlatformData::numberOfCameras();
     if (numberOfCameras == 0 || numberOfCameras > MAX_CPF_CACHED) {
         LOGE("Camera HAL Basic Platform initialization failed !!number of camera: %d", numberOfCameras);
@@ -1066,6 +1066,26 @@ status_t CameraHWInfo::init(const std::vector<std::string> &mediaDevicePath)
     getMediaCtlElementNames(mMediaCtlElementNames, true);
 
     return initDriverList();
+}
+
+status_t CameraHWInfo::initAvailableSensorOutputFormats(void)
+{
+    status_t ret = OK;
+    SensorFormat tmpOutputFormats;
+
+    LOGI("@%s", __FUNCTION__);
+    mSensorOutputFormats.clear();
+
+    int numberOfCameras = PlatformData::numberOfCameras();
+    int i = 0;
+    for (i = 0; i < numberOfCameras; i++) {
+        getAvailableSensorOutputFormats(i, tmpOutputFormats, true);
+        mSensorOutputFormats[i] = tmpOutputFormats;
+    }
+
+	LOGI("@%s mSensorOutputFormats.size()(%d)", __FUNCTION__, mSensorOutputFormats.size());
+
+    return ret;
 }
 
 status_t CameraHWInfo::initDriverList()
@@ -1608,15 +1628,23 @@ status_t CameraHWInfo::getSensorEntityName(int32_t cameraId,
 }
 
 status_t CameraHWInfo::getAvailableSensorOutputFormats(int32_t cameraId,
-                                               SensorFormat &OutputFormats) const
+                                               SensorFormat &OutputFormats, bool isFirst) const
 {
     status_t ret = NO_ERROR;
     const char *devname;
     std::string sDevName;
     OutputFormats.clear();
 
-    LOGI("@%s", __FUNCTION__);
+    LOGI("@%s cameraId(%d) isFirst(%s)", __FUNCTION__, cameraId, isFirst?"true":"false");
     string sensorEntityName = "none";
+
+    if(!isFirst) {
+        if (mSensorOutputFormats.find(cameraId) != mSensorOutputFormats.end()) {
+            LOGI("@%s cameraId(%d)", __FUNCTION__, mSensorOutputFormats.find(cameraId)->first);
+            OutputFormats = mSensorOutputFormats.find(cameraId)->second;
+        }
+        return ret;
+    }
 
     ret = getSensorEntityName(cameraId, sensorEntityName);
     if (ret != NO_ERROR)
