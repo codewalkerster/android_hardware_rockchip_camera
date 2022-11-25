@@ -91,6 +91,10 @@ int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
 	param.height = in->height;
 	param.format = in->fmt;
 #endif
+#if defined(ODROID)
+	src.fd = -1;
+	src.virAddr = (void*)in->vir_addr;
+#else
 	if (in->fd == -1) {
 		src.fd = -1;
 		src.virAddr = (void*)in->vir_addr;
@@ -105,6 +109,7 @@ int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
 		LOGD("@%s,src fd:%d,width:%d,height:%d,format:%d",__FUNCTION__,src.fd,param.width,param.height,param.format);
 #endif
 	}
+#endif
 	src.mmuFlag = ((2 & 0x3) << 4) | 1 | (1 << 8) | (1 << 10);
 
 #if defined(TARGET_RK3588)
@@ -112,6 +117,10 @@ int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
 	param.height = out->height;
 	param.format = out->fmt;
 #endif
+#if defined(ODROID)
+	dst.fd = -1;
+	dst.virAddr = (void*)out->vir_addr;
+#else
 	if (out->fd == -1 ) {
 		dst.fd = -1;
 		dst.virAddr = (void*)out->vir_addr;
@@ -126,6 +135,7 @@ int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
 		LOGD("@%s,dst fd:%d,width:%d,height:%d,format:%d",__FUNCTION__,dst.fd,param.width,param.height,param.format);
 #endif
 	}
+#endif
 	dst.mmuFlag = ((2 & 0x3) << 4) | 1 | (1 << 8) | (1 << 10);
 
 	rga_set_rect(&src.rect,
